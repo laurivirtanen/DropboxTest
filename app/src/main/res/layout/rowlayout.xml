@@ -5,10 +5,12 @@
 
     <TextView
         android:id="@+id/rowtext"
+        android:textColor="#FFFFFF"
         android:layout_width="match_parent"
         android:layout_height="50dp"
+        android:textStyle="bold"
         android:gravity="center"
-        android:text="Terve perkele"
+        android:text="Placeholder"
         />
 
 </LinearLayout>
