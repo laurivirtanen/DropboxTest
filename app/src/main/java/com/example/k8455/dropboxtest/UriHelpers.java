@@ -10,12 +10,20 @@ import android.provider.MediaStore;
 
 import java.io.File;
 
+
 /**
+ * We had to use this method to get the file path from uri
+ * Straight from the dropbox tutorial pages
+ *
+ *
+ *
  *  Utility functions to support Uri conversion and processing.
+ *
  */
 public final class UriHelpers {
 
     private UriHelpers() {}
+
 
     /**
      * Get the file path for a uri. This is a convoluted way to get the path for an Uri created using the

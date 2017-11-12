@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 /**
  * Created by K8455 on 8.11.2017.
+ * Adapter for listview items
  */
 
 public class DropboxAdapter extends ArrayAdapter<String> {

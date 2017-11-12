@@ -5,16 +5,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.OpenableColumns;
-import android.renderscript.ScriptGroup;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,9 +23,7 @@ import com.dropbox.core.v2.DbxClientV2;
 import com.dropbox.core.v2.files.FileMetadata;
 import com.dropbox.core.v2.files.ListFolderResult;
 import com.dropbox.core.v2.files.Metadata;
-import com.dropbox.core.v2.files.UploadBuilder;
 import com.dropbox.core.v2.files.WriteMode;
-import com.dropbox.core.v2.users.FullAccount;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Date;
+
 
 public class DownloadFileTask extends Activity {
 
@@ -55,6 +47,7 @@ public class DownloadFileTask extends Activity {
         setContentView(R.layout.activity_download_file_task);
         context = this;
 
+        //really bad permission check, fix if time
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
                 PackageManager.PERMISSION_GRANTED) {
             //do the things} else {
@@ -84,7 +77,6 @@ public class DownloadFileTask extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Toast.makeText(getApplicationContext(),"Logged in Successfully",Toast.LENGTH_SHORT);
 
         String ACCESS_TOKEN = "";
         try {
@@ -92,28 +84,21 @@ public class DownloadFileTask extends Activity {
             ACCESS_TOKEN = Auth.getOAuth2Token();
 
         } catch (Exception ex) {
-            Log.d("Lollo", ex.getMessage());
+            Log.d("Access token failed", ex.getMessage());
         }
-        if (ACCESS_TOKEN.isEmpty()) {
 
+
+        ///Shows or hides UI depending on login success
+        if (ACCESS_TOKEN.isEmpty()) {
             findViewById(R.id.authButton).setVisibility(View.VISIBLE);
-            //findViewById(R.id.upload).setVisibility(View.GONE);
             findViewById(R.id.uploadButton).setVisibility(View.GONE);
-            //findViewById(R.id.download).setVisibility(View.GONE);
             findViewById(R.id.button).setVisibility(View.GONE);
-//                findViewById(R.id.textView).setVisibility(View.GONE);
-//                findViewById(R.id.textView2).setVisibility(View.GONE);
             findViewById(R.id.listView).setVisibility(View.GONE);
         } else {
-
             new PrintDropBoxFolders().execute();
             findViewById(R.id.authButton).setVisibility(View.GONE);
-            //findViewById(R.id.upload).setVisibility(View.VISIBLE);
             findViewById(R.id.uploadButton).setVisibility(View.VISIBLE);
-            //findViewById(R.id.download).setVisibility(View.VISIBLE);
             findViewById(R.id.button).setVisibility(View.VISIBLE);
-//                findViewById(R.id.textView).setVisibility(View.VISIBLE);
-//                findViewById(R.id.textView2).setVisibility(View.VISIBLE);
             findViewById(R.id.listView).setVisibility(View.VISIBLE);
         }
     }
@@ -142,10 +127,6 @@ public class DownloadFileTask extends Activity {
     public void asyncTaskClicked(View view) {
         asynb = (Button) findViewById(R.id.button);
         asynb.setEnabled(false);
-        //uploadtext = (EditText) findViewById(R.id.upload);
-        //imageToDownload = (EditText) findViewById(R.id.download);
-        // text = uploadtext.getText().toString();
-        //downloadFile = imageToDownload.getText().toString();
         new DropboxTest().execute();
         new PrintDropBoxFolders().execute();
     }
@@ -166,27 +147,31 @@ public class DownloadFileTask extends Activity {
         @Override
         protected void onPostExecute(final ArrayList<String> parameters) {
 
-            DropboxAdapter adapter = new DropboxAdapter(context, parameters);
-            ListView listView = (ListView) findViewById(R.id.listView);
-            listView.setAdapter(adapter);
+            try {
+                DropboxAdapter adapter = new DropboxAdapter(context, parameters);
+                ListView listView = (ListView) findViewById(R.id.listView);
+                listView.setAdapter(adapter);
 
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    String item = parameters.get(position);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        String item = parameters.get(position);
 
+                        //Bad check for file, fix if time
+                        if (item.contains(".")) {
+                            downloadFile = item;
+                            Log.d("Onclick item", item);
+                        } else {
+                            downloadFile = null;
+                            folderName = item + "/";
+                            Log.d("Onclick folder", folderName);
+                        }
 
-                    if (item.toLowerCase().endsWith(".txt") || item.toLowerCase().endsWith(".jpg")) {
-                        downloadFile = item;
-                        Log.d("Onclick item", item);
-                    } else {
-                        downloadFile = null;
-                        folderName = item + "/";
-                        Log.d("Onclick folder", folderName);
                     }
-
-                }
-            });
+                });
+            }catch (Exception e){
+                Log.d("Error","**** ERROR ****");
+            }
         }
 
         public ArrayList<String> PrintStuff() {
@@ -212,7 +197,13 @@ public class DownloadFileTask extends Activity {
         }
     }
 
-    private class DropboxTest extends AsyncTask<FileMetadata, Void, File> {
+
+    //**********
+    // DOWNLOADER
+    // DOWNLOADER
+    // DOWNLOADER
+    //**********
+    private class DropboxTest extends AsyncTask<String, Void, File> {
 
         @Override
         protected void onPreExecute() {
@@ -220,9 +211,13 @@ public class DownloadFileTask extends Activity {
         }
 
         @Override
-        protected File doInBackground(FileMetadata... params) {
+        protected File doInBackground(String... params) {
 
-            //DOWNLOADER
+            //**********
+            // DOWNLOADER
+            // DOWNLOADER
+            // DOWNLOADER
+            //**********
 
             try {
 
@@ -231,9 +226,8 @@ public class DownloadFileTask extends Activity {
                     Metadata metadata = client.files().getMetadata(downloadFile);
                     File path = Environment.getExternalStoragePublicDirectory(
                             Environment.DIRECTORY_DOWNLOADS);
-                    Log.d("Path", path.toString());
                     File file = new File(path, metadata.getName());
-                    Log.d("Test", file.getName());
+                    //Log.d("Test", file.getName());
 
                     OutputStream outputStream = new FileOutputStream(file);
                     client.files()
@@ -241,9 +235,6 @@ public class DownloadFileTask extends Activity {
                             .download(outputStream);
                     outputStream.close();
 
-//            Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-//            intent.setData(Uri.fromFile(file));
-//            context.sendBroadcast(intent);
                     Log.d("Downloaded file", file.getAbsolutePath());
                     return file;
                 }
@@ -264,8 +255,10 @@ public class DownloadFileTask extends Activity {
         @Override
         protected void onPostExecute(File parameters) {
             asynb.setEnabled(true);
+            if(parameters != null){
+                Toast.makeText(context,"--- Downloaded ---\n"+parameters.getName(),Toast.LENGTH_LONG).show();
+            }
            // homeButton.setEnabled(true);
-            //tv.setText(files += "Downloaded: " + downloadFile);
 
         }
 
@@ -275,30 +268,38 @@ public class DownloadFileTask extends Activity {
         }
     }
 
-//Browse phone files through intent
-    Uri fullPhotoUri;
-    static final int REQUEST_IMAGE_GET = 1;
 
+    //Browse phone files through intent
+    //Browse phone files through intent
+    //Browse phone files through intent
+    static final int REQUEST_FILE_GET = 1;
     public void searchFile(View view) {
+
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");
         if (intent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(intent, REQUEST_IMAGE_GET);
+            startActivityForResult(intent, REQUEST_FILE_GET);
         } else {
             Toast.makeText(getApplicationContext(), "Not able to search files", Toast.LENGTH_SHORT).show();
         }
+
     }
 
+
+    //UPLOAD file browser return
+    //UPLOAD file browser return
     //UPLOAD file browser return
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_IMAGE_GET && resultCode == RESULT_OK) {
-            Bitmap thumbnail = data.getParcelableExtra("data");
-            String filepath = data.getData().getPath();
-            Log.d("Filepath", filepath);
-            fullPhotoUri = data.getData();
-            Log.d("URI:", fullPhotoUri.toString());
-            new UploadDropbox().execute();
+        if (requestCode == REQUEST_FILE_GET && resultCode == RESULT_OK) {
+//            Bitmap thumbnail = data.getParcelableExtra("data");
+//            String filepath = data.getData().getPath();
+            //Log.d("Filepath", filepath);
+            //Log.d("URI:", filepathUri.toString());
+            //Uri filepathUri = data.getData();
+
+            //*** SEND FILE URI TO UPLOAD ***//
+            new UploadDropbox().execute(data.getData());
 
         }
     }
@@ -308,14 +309,15 @@ public class DownloadFileTask extends Activity {
         asynb = (Button) findViewById(R.id.uploadButton);
         searchFile(view);
         asynb.setEnabled(false);
-        //uploadtext = (EditText) findViewById(R.id.upload);
-        //imageToDownload = (EditText) findViewById(R.id.download);
-        //text = uploadtext.getText().toString();
-        //downloadFile = imageToDownload.getText().toString();
     }
 
 
-    private class UploadDropbox extends AsyncTask<String, Void, FileMetadata> {
+    //Uploader
+    //Uploader
+    //Uploader
+    //Uploader
+    //Uploader
+    private class UploadDropbox extends AsyncTask<Uri, Void, FileMetadata> {
 
         @Override
         protected void onPreExecute() {
@@ -323,14 +325,14 @@ public class DownloadFileTask extends Activity {
         }
 
         @Override
-        protected FileMetadata doInBackground(String... params) {
-            //Uploader();
-            //String localUri = params[0];
-            String tempFold = "/";
+        protected FileMetadata doInBackground(Uri... params) {
+
+
+            String tempFolder = "/";
             if(!folderName.isEmpty()){
-                tempFold = folderName;
+                tempFolder = folderName;
             }
-            File localFile = UriHelpers.getFileForUri(getApplicationContext(), fullPhotoUri);
+            File localFile = UriHelpers.getFileForUri(getApplicationContext(), params[0]);
             if (localFile != null) {
                 //String remoteFolderPath = params[1];
 
@@ -338,9 +340,7 @@ public class DownloadFileTask extends Activity {
                 try {
                     InputStream inputStream = new FileInputStream(localFile);
                     {
-
-                        return client.files().uploadBuilder(tempFold + remoteFileName)
-                                .withAutorename(true)
+                        return client.files().uploadBuilder(tempFolder + remoteFileName)
                                 .withMode(WriteMode.OVERWRITE)
                                 .uploadAndFinish(inputStream);
                     }
@@ -359,7 +359,10 @@ public class DownloadFileTask extends Activity {
         @Override
         protected void onPostExecute(FileMetadata parameters) {
             asynb.setEnabled(true);
-            //tv.setText(files += "Downloaded: " + downloadFile);
+            if(parameters != null){
+            Toast.makeText(context,"--- Uploaded ---\n"+parameters.getName(),Toast.LENGTH_LONG).show();
+            }
+
 
         }
 
@@ -371,85 +374,6 @@ public class DownloadFileTask extends Activity {
 
 }
 
-
-
-
-//    public void Uploader()  {
-//        try {
-//
-//
-//
-//
-//            InputStream is = getContentResolver().openInputStream(fullPhotoUri);
-//
-//            InputStream in = new FileInputStream(is.toString());
-//            FileMetadata metadata = client.files().uploadBuilder("/")
-//                    .withAutorename(true)
-//                    .uploadAndFinish(in);
-//            //Bitmap bitmap = BitmapFactory.decodeStream(is);
-//            is.close();
-//
-//
-//            //String filepath = fullPhotoUri.getPath();
-//
-//
-////            InputStream in = getContentResolver().openInputStream(fullPhotoUri);
-////
-////
-////
-////            client.files().uploadBuilder("/")
-////                    .withAutorename(true)
-////                    .withMute(true)
-////                    .withClientModified(new Date())
-////                    .uploadAndFinish(in);
-////
-////            in.close();
-//
-//
-//            //java.net.URI javauri = new java.net.URI(fullPhotoUri.toString());
-//
-////            File file = new File(getContentResolver().SCHEME_FILE);
-////            Log.d("Scheme", getContentResolver().SCHEME_FILE);
-////            //file.getAbsolutePath();
-////            //InputStream in = getContentResolver().openInputStream(fullPhotoUri);
-////            InputStream in = getContentResolver().openInputStream(fullPhotoUri);
-////
-////            Log.d("Inputstream;",in.toString());
-////
-////
-////            //try (InputStream in = new FileInputStream(file.getAbsoluteFile())) {
-////            FileMetadata metadata = client.files().uploadBuilder("/KUVIA/"+file.getName())
-////                    .uploadAndFinish(in);
-////
-////            in.close();
-//
-//            } catch (Exception e) {
-//                Log.d("Upload Error",e.getMessage());
-//            }
-//        }
-//
-//        }
-//
-//
-//
-//            //String filename = text;
-//
-//
-//            //Upload test
-////            try (InputStream in = new FileInputStream(text)) {
-////                FileMetadata metadata = client.files().uploadBuilder(text)
-////                        .uploadAndFinish(in);
-////
-////                in.close();
-////            } catch (IOException e) {
-////                Log.d("Upload Error",e.getMessage());
-////            }
-//
-//
-////        } catch (Exception e){
-////
-////            Log.d("Upload Error",e.getMessage());
-////        }
 
 
 
